@@ -6,6 +6,9 @@
 - Word/PDF/Excel上传构建知识库
 - Streamlit交互界面
 
+## 🧰 环境要求
+已在win10/nvidia geforce rtx3060laptop成功运行，如需迁移至linux系统，请注意修改目录路径的斜线
+
 ## 🚀 快速开始
 ```bash
 # 安装依赖
@@ -18,16 +21,16 @@ python scripts/build_vector_store.py
 python scripts/run_web_ui.py
 ```
 
-## 📂 模型下载建议（支持GGUF量化版和safetensors格式）
+## 📦 模型下载建议（支持GGUF量化版和safetensors格式）
 - Qwen: [Qwen1.5-1.8B](https://huggingface.co/Qwen/Qwen1.5-1.8B/tree/main)
 - THUDM: [glm-edge-1.5b-chat](https://huggingface.co/THUDM/glm-edge-1.5b-chat/tree/main)
 - openbmb: [MiniCPM4-0.5B](https://huggingface.co/openbmb/MiniCPM4-0.5B/tree/main)
 - TinyLlama: [TinyLlama-1.1B-Chat-v1.0](https://huggingface.co/TinyLlama/TinyLlama-1.1B-Chat-v1.0/tree/main)
 - [llama-2-7b.Q4_K_M](https://huggingface.co/TheBloke/Llama-2-7B-GGUF/tree/main)
 
-将模型下载放入 `models/` 目录下。
+✅ 下载后统一放置到 models/ 目录下对应子文件夹中。
 
-## 项目目录结构
+## 📁 项目目录结构
 
 ```text
 │  chat_history.json
@@ -105,9 +108,9 @@ python scripts/run_web_ui.py
 
 ```
 
-## 实践
-- Baichuan2-7B-Chat、Yi-1.5-6B-Chat在移动版3060爆显存
-- 有些依赖必须在Linux环境下，Windows系统无法安装
-- MiniCPM-2B-sft-bf16、MiniCPM3-4B-GGUF简单调试后发现无法适配
-- llama-2-7b.Q4_K_M模型推理如果设置"gpu_layers"参数的话，可能会导致回答效果降低
-- 综合对比还是qwen效果好
+## 🔍 实践
+- ❗ Baichuan2-7B-Chat、Yi-1.5-6B-Chat在移动版3060爆显存
+- 🔧 有些依赖必须在Linux环境下，Windows系统无法安装
+- ❌ MiniCPM-2B-sft-bf16、MiniCPM3-4B-GGUF简单调试后发现无法适配
+- ⚙️ llama-2-7b.Q4_K_M模型推理如果设置"gpu_layers"参数的话，可能会导致回答效果降低
+- ✅ 综合对比还是qwen效果好
