@@ -1,3 +1,4 @@
+# scripts/build_vector_stroe.py
 from pathlib import Path
 import os
 import json

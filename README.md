@@ -18,10 +18,7 @@ python scripts/build_vector_store.py
 python scripts/run_web_ui.py
 ```
 
-## 📂 模型下载建议（GGUF量化版）
-- MiniCPM: [Q4_K_M](https://huggingface.co/openbmb/MiniCPM-2B-dpo-GGUF)
-- Chinese-Alpaca: [Q4_0](https://huggingface.co/ziqingyang/chinese-alpaca-2-7b-GGUF)
-- Yi-6B: [Q4_K_M](https://huggingface.co/01-ai/Yi-6B-Chat-GGUF)
-- BGE-Llama: [Q4_K_M](https://huggingface.co/FlagOpen/flagembedding-llama2-zh-GGUF)
+## 📂 模型下载建议（支持GGUF量化版和safetensors格式）
+- Qwen: [Qwen1.5-1.8B](https://huggingface.co/Qwen/Qwen1.5-1.8B/tree/main) (下载config.json、model.safetensors、tokenizer.json、tokenizer_config.json、vocab.json、merges.txt、generation_config.json文件)
 
 将模型下载放入 `models/` 目录下。

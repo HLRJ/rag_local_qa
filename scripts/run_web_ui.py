@@ -10,7 +10,7 @@ from pathlib import Path
 
 current_dir = Path(__file__).resolve().parent
 vector_store_file = current_dir.parent / "embeddings/faiss_store/index.faiss"
-query_script = current_dir / "query_rag.py"
+query_script = current_dir / "query_rag_mixed.py"
 
 if not vector_store_file.exists():
     print("❌ 未检测到向量库 embeddings/faiss_store/index.faiss")
