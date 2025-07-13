@@ -20,15 +20,40 @@ CHAT_HISTORY_FILE = BASE_DIR / "chat_history.json"
 
 # ========== 模型列表 ==========
 MODEL_CONFIGS = {
-    "llama-2-7b.Q2_K": {
-        "type": "gguf",
-        "model_path": str(BASE_DIR / "models" / "llama" / "llama-2-7b.Q2_K.gguf"),
-        "model_type": "llama"
-    },
     "Qwen-1.8B-SAFETENSORS": {
         "type": "transformers",
         "model_path": BASE_DIR / "models/Qwen/Qwen1.5-1.8B",  # huggingface路径或本地路径
-    }
+    },
+    # "Baichuan2-7B-Chat": {
+    #     "type": "transformers",
+    #     "model_path": BASE_DIR / "models/Baichuan/Baichuan2-7B-Chat-4bits",
+    # },
+    "MiniCPM4-0.5B": {
+        "type": "transformers",
+        "model_path": str(BASE_DIR / "models" / "openbmb" / "MiniCPM4-0.5B"),
+    },
+    # "Yi-1.5-6B-Chat": {
+    #     "type": "transformers",
+    #     "model_path": BASE_DIR / "models/01-ai/Yi-1.5-6B-Chat",
+    # },
+    "TinyLlama-1.1B-Chat-v1.0": {
+        "type": "transformers",
+        "model_path": str(BASE_DIR / "models" / "TinyLlama" / "TinyLlama-1.1B-Chat-v1.0"),
+    },
+    # "phi-2.Q4_K_M.gguf": {
+    #     "type": "gguf",
+    #     "model_path": str(BASE_DIR / "models" / "phi-2" / "phi-2.Q4_K_M.gguf"),
+    #     "model_type": "phi"
+    # },
+    "glm-edge-1.5b-chat": {
+        "type": "transformers",
+        "model_path": str(BASE_DIR / "models" / "THUDM" / "glm-edge-1.5b-chat"),
+    },
+    "llama-2-7b.Q4_K_M": {
+        "type": "gguf",
+        "model_path": str(BASE_DIR / "models" / "llama" / "llama-2-7b.Q4_K_M.gguf"),
+        "model_type": "llama"
+    },
 }
 
 # ========== PROMPT 模板 ==========
@@ -60,25 +85,42 @@ def load_llm(model_key):
         return CTransformers(
             model=str(config["model_path"]),
             model_type=config["model_type"],
-            config={"max_new_tokens": 512, "temperature": 0.7},
+            config={"max_new_tokens": 512, "temperature": 0.7, "gpu_layers": 15},
             repetition_penalty=1.1,
             stop=["\nUser:"],
         )
     elif config["type"] == "transformers":
-        tokenizer = AutoTokenizer.from_pretrained(config["model_path"], trust_remote_code=True)
+        tokenizer = AutoTokenizer.from_pretrained(
+            config["model_path"],
+            trust_remote_code=True,
+            use_fast=False,
+        )
 
-        # 解决 load_in_4bit 弃用问题
+
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_compute_dtype=torch.float16,
             bnb_4bit_use_double_quant=True,
             bnb_4bit_quant_type="nf4",
         )
+        # # ✅ 手动设置 device_map，部分模块卸载到 CPU
+        # device_map = {
+        #     "model.embed_tokens": "cuda:0",
+        #     "model.layers.0": "cuda:0",
+        #     "model.layers.1": "cpu",  # 显存不足，从第 1 层卸载到 CPU
+        #     "model.layers.2": "cpu",
+        #     "model.layers.3": "cpu",
+        #     "model.layers.4": "cpu",
+        #     "model.norm": "cpu",
+        #     "lm_head": "cuda:0",
+        # }
         model = AutoModelForCausalLM.from_pretrained(
             config["model_path"],
             device_map="auto",
             torch_dtype=torch.float16,
+            # load_in_8bit=True,  # 8bit量化
             quantization_config=bnb_config,
+            trust_remote_code=True,
         )
         # ✅ 设置 stop_token
         eos_token_id = tokenizer.eos_token_id or tokenizer.pad_token_id or 2
