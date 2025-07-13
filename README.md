@@ -19,13 +19,91 @@ python scripts/run_web_ui.py
 ```
 
 ## 📂 模型下载建议（支持GGUF量化版和safetensors格式）
-- Qwen: [Qwen1.5-1.8B](https://huggingface.co/Qwen/Qwen1.5-1.8B/tree/main) (下载config.json、model.safetensors、tokenizer.json、tokenizer_config.json、vocab.json、merges.txt、generation_config.json文件)
+- Qwen: [Qwen1.5-1.8B](https://huggingface.co/Qwen/Qwen1.5-1.8B/tree/main)
 - THUDM: [glm-edge-1.5b-chat](https://huggingface.co/THUDM/glm-edge-1.5b-chat/tree/main)
 - openbmb: [MiniCPM4-0.5B](https://huggingface.co/openbmb/MiniCPM4-0.5B/tree/main)
 - TinyLlama: [TinyLlama-1.1B-Chat-v1.0](https://huggingface.co/TinyLlama/TinyLlama-1.1B-Chat-v1.0/tree/main)
 - [llama-2-7b.Q4_K_M](https://huggingface.co/TheBloke/Llama-2-7B-GGUF/tree/main)
 
 将模型下载放入 `models/` 目录下。
+
+## 项目目录结构
+
+```text
+│  chat_history.json
+│  README.md
+│  requirements.txt
+│  test.py
+│
+│
+├─data
+│      Linux常用命令手册.pdf    
+│
+├─embeddings
+│  └─faiss_store
+│          index.faiss
+│          index.pkl
+│          record.json
+│
+├─models
+│  ├─llama
+│  │      llama-2-7b.Q4_K_M.gguf
+│  │
+│  ├─openbmb
+│  │  └─MiniCPM4-0.5B
+│  │          added_tokens.json
+│  │          config.json
+│  │          configuration_minicpm.py
+│  │          generation_config.json
+│  │          model.safetensors
+│  │          modeling_minicpm.py
+│  │          special_tokens_map.json
+│  │          tokenizer.json
+│  │          tokenizer.model
+│  │          tokenizer_config.json
+│  │
+│  ├─Qwen
+│  │  └─Qwen1.5-1.8B
+│  │          config.json
+│  │          generation_config.json
+│  │          merges.txt
+│  │          model.safetensors
+│  │          tokenizer.json
+│  │          tokenizer_config.json
+│  │          vocab.json
+│  │
+│  ├─THUDM
+│  │  └─glm-edge-1.5b-chat
+│  │          config.json
+│  │          generation_config.json
+│  │          model.safetensors
+│  │          special_tokens_map.json
+│  │          tokenizer.json
+│  │          tokenizer_config.json
+│  │
+│  └─TinyLlama
+│      └─TinyLlama-1.1B-Chat-v1.0
+│              config.json
+│              eval_results.json
+│              generation_config.json
+│              model.safetensors
+│              special_tokens_map.json
+│              tokenizer.json
+│              tokenizer.model
+│              tokenizer_config.json
+│
+├─scripts
+│      build_vector_store.py
+│      query_rag.py
+│      query_rag_mixed.py
+│      remove_doc.py
+│      run_web_ui.py
+│
+└─tools
+        read_gguf_header.py
+        test_ctransformers.py
+
+```
 
 ## 实践
 - Baichuan2-7B-Chat、Yi-1.5-6B-Chat在移动版3060爆显存
