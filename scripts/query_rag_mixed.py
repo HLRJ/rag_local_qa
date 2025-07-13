@@ -9,8 +9,8 @@ from langchain_community.vectorstores import FAISS
 from langchain_community.llms import CTransformers
 from langchain.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
-from langchain_community.llms import HuggingFacePipeline
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+from langchain_huggingface import HuggingFacePipeline
+from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline, BitsAndBytesConfig
 
 
 # ========== 基础路径 ==========
@@ -19,30 +19,31 @@ EMBEDDING_PATH = BASE_DIR / "embeddings/faiss_store"
 CHAT_HISTORY_FILE = BASE_DIR / "chat_history.json"
 
 # ========== 模型列表 ==========
-MODEL_CONFIG = {
+MODEL_CONFIGS = {
     "llama-2-7b.Q2_K": {
         "type": "gguf",
         "model_path": str(BASE_DIR / "models" / "llama" / "llama-2-7b.Q2_K.gguf"),
         "model_type": "llama"
     },
     "Qwen-1.8B-SAFETENSORS": {
-        "type": "hf",
+        "type": "transformers",
         "model_path": BASE_DIR / "models/Qwen/Qwen1.5-1.8B",  # huggingface路径或本地路径
     }
 }
 
 # ========== PROMPT 模板 ==========
 PROMPT_TEMPLATE = """
-已知信息如下：
+请仅基于下列信息，回答用户的问题，不要重复、不要生成多个版本：
+
 ----------------
 {context}
 ----------------
 
-用户提问：
-{question}
+问题：{question}
 
-### 回答：
+请用中文直接回答，简洁明了，不要重复提示、不要复述问题。只回答一次。
 """
+
 
 
 # ========== 向量库加载 ==========
@@ -54,28 +55,43 @@ def load_vector_store():
 # ========== 模型加载逻辑 ==========
 @st.cache_resource
 def load_llm(model_key):
-    config = MODEL_CONFIG[model_key]
+    config = MODEL_CONFIGS[model_key]
     if config["type"] == "gguf":
         return CTransformers(
             model=str(config["model_path"]),
             model_type=config["model_type"],
-            config={"max_new_tokens": 512, "temperature": 0.7}
+            config={"max_new_tokens": 512, "temperature": 0.7},
+            repetition_penalty=1.1,
+            stop=["\nUser:"],
         )
-    elif config["type"] == "hf":
+    elif config["type"] == "transformers":
         tokenizer = AutoTokenizer.from_pretrained(config["model_path"], trust_remote_code=True)
+
+        # 解决 load_in_4bit 弃用问题
+        bnb_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.float16,
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_quant_type="nf4",
+        )
         model = AutoModelForCausalLM.from_pretrained(
             config["model_path"],
             device_map="auto",
             torch_dtype=torch.float16,
-            load_in_4bit=True  # 自动适配低显存
+            quantization_config=bnb_config,
         )
+        # ✅ 设置 stop_token
+        eos_token_id = tokenizer.eos_token_id or tokenizer.pad_token_id or 2
+
         pipe = pipeline(
             "text-generation",
             model=model,
             tokenizer=tokenizer,
             max_new_tokens=512,
             temperature=0.7,
-            repetition_penalty=1.1
+            repetition_penalty=1.1,
+            eos_token_id = eos_token_id,  # ✅ 控制生成终止
+            return_full_text = False  # ✅ 只返回回答部分
         )
         return HuggingFacePipeline(pipeline=pipe)
     else:
@@ -102,14 +118,24 @@ def main():
     history = load_chat_history()
 
     with st.sidebar:
-        model_choice = st.selectbox("选择模型：", list(MODEL_CONFIG.keys()))
+        model_choice = st.selectbox("选择模型：", list(MODEL_CONFIGS.keys()))
         query = st.text_area("输入你的问题：", "", height=150)
         do = st.button("🔍 提问")
         if st.button("🧹 清空历史记录"):
             history = []
             save_chat_history(history)
             st.rerun()
-
+    with st.expander("📜 历史问答记录", expanded=False):
+        if history:
+            for idx, chat in enumerate(reversed(history), 1):
+                st.markdown(f"**{idx}. 用户问题：** {chat['question']}")
+                st.markdown(f"**🤖 回答：** {chat['answer']}")
+                if chat["sources"]:
+                    for i, s in enumerate(chat["sources"], 1):
+                        st.markdown(f"📄 **片段{i}：{s['source']}**")
+                        st.caption(s["content"])
+        else:
+            st.info("暂无历史记录")
     if do and query.strip():
         with st.spinner("🔄 正在处理..."):
             llm = load_llm(model_choice)
@@ -135,18 +161,17 @@ def main():
             save_chat_history(history)
             st.rerun()
 
-    st.subheader("💬 历史问答记录")
+    # ✅ 仅展示最新一次回答
     if history:
-        for idx, chat in enumerate(reversed(history), 1):
-            st.markdown(f"**{idx}. 用户提问：** {chat['question']}")
-            st.markdown(f"**🤖 回答：** {chat['answer']}")
-            if chat["sources"]:
-                with st.expander("📄 查看参考片段"):
-                    for i, s in enumerate(chat["sources"], 1):
-                        st.markdown(f"**片段{i}：{s['source']}**")
-                        st.write(s["content"])
-    else:
-        st.info("暂无历史记录")
+        st.subheader("💬 当前回答")
+        chat = history[-1]
+        st.markdown(f"**🧾 问题：** {chat['question']}")
+        st.markdown(f"**🤖 回答：** {chat['answer']}")
+        if chat["sources"]:
+            with st.expander("📄 查看参考片段"):
+                for i, s in enumerate(chat["sources"], 1):
+                    st.markdown(f"**片段{i}：{s['source']}**")
+                    st.write(s["content"])
 
 if __name__ == "__main__":
     main()
