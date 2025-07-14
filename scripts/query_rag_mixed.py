@@ -12,6 +12,8 @@ from langchain.chains import RetrievalQA
 from langchain_huggingface import HuggingFacePipeline
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline, BitsAndBytesConfig
 
+# 不加载tf
+os.environ["TRANSFORMERS_NO_TF"] = "1"
 
 # ========== 基础路径 ==========
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -153,67 +155,75 @@ def save_chat_history(history):
 # ========== 主界面 ==========
 def main():
     st.set_page_config(page_title="RAG 运维问答（GGUF + safetensors）", layout="wide")
-    st.title("📘 本地中文运维智能问答")
+    st.title("🧠 本地中文运维智能问答")
+    tool = st.sidebar.radio("🛠 功能模块", ["📘 RAG问答", "🕸️ 图谱交互"])
 
-    db = load_vector_store()
-    prompt = PromptTemplate(template=PROMPT_TEMPLATE, input_variables=["context", "question"])
-    history = load_chat_history()
+    if tool == "📘 RAG问答":
+        db = load_vector_store()
+        prompt = PromptTemplate(template=PROMPT_TEMPLATE, input_variables=["context", "question"])
+        history = load_chat_history()
 
-    with st.sidebar:
-        model_choice = st.selectbox("选择模型：", list(MODEL_CONFIGS.keys()))
-        query = st.text_area("输入你的问题：", "", height=150)
-        do = st.button("🔍 提问")
-        if st.button("🧹 清空历史记录"):
-            history = []
-            save_chat_history(history)
-            st.rerun()
-    with st.expander("📜 历史问答记录", expanded=False):
+        with st.sidebar:
+            model_choice = st.selectbox("🤖 选择模型：", list(MODEL_CONFIGS.keys()))
+            query = st.text_area("💬 输入你的问题：", "", height=150)
+            do = st.button("🔍 提问")
+            if st.button("🧹 清空历史记录"):
+                history = []
+                save_chat_history(history)
+                st.rerun()
+
+        with st.expander("📜 历史问答记录", expanded=False):
+            if history:
+                for idx, chat in enumerate(reversed(history), 1):
+                    st.markdown(f"**{idx}. 用户问题：** {chat['question']}")
+                    st.markdown(f"**🤖 回答：** {chat['answer']}")
+                    if chat["sources"]:
+                        for i, s in enumerate(chat["sources"], 1):
+                            st.markdown(f"📄 **片段{i}：{s['source']}**")
+                            st.caption(s["content"])
+            else:
+                st.info("暂无历史记录")
+
+        if do and query.strip():
+            with st.spinner("🔄 正在处理..."):
+                llm = load_llm(model_choice)
+                retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 8, "score_threshold": 0.3})
+                qa = RetrievalQA.from_chain_type(
+                    llm=llm,
+                    chain_type="stuff",
+                    retriever=retriever,
+                    return_source_documents=True,
+                    chain_type_kwargs={"prompt": prompt}
+                )
+                res = qa.invoke(query)
+                answer = res["result"]
+
+                history.append({
+                    "question": query,
+                    "answer": answer,
+                    "sources": [
+                        {"source": doc.metadata.get("source", ""), "content": doc.page_content[:300] + "..."}
+                        for doc in res["source_documents"]
+                    ]
+                })
+                save_chat_history(history)
+                st.rerun()
+
+        # ✅ 展示最新结果
         if history:
-            for idx, chat in enumerate(reversed(history), 1):
-                st.markdown(f"**{idx}. 用户问题：** {chat['question']}")
-                st.markdown(f"**🤖 回答：** {chat['answer']}")
-                if chat["sources"]:
+            st.subheader("📌 当前回答")
+            chat = history[-1]
+            st.markdown(f"**🧾 问题：** {chat['question']}")
+            st.markdown(f"**🤖 回答：** {chat['answer']}")
+            if chat["sources"]:
+                with st.expander("📄 查看参考片段"):
                     for i, s in enumerate(chat["sources"], 1):
-                        st.markdown(f"📄 **片段{i}：{s['source']}**")
-                        st.caption(s["content"])
-        else:
-            st.info("暂无历史记录")
-    if do and query.strip():
-        with st.spinner("🔄 正在处理..."):
-            llm = load_llm(model_choice)
-            retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 8, "score_threshold": 0.3})
-            qa = RetrievalQA.from_chain_type(
-                llm=llm,
-                chain_type="stuff",
-                retriever=retriever,
-                return_source_documents=True,
-                chain_type_kwargs={"prompt": prompt}
-            )
-            res = qa.invoke(query)
-            answer = res["result"]
+                        st.markdown(f"**片段{i}：{s['source']}**")
+                        st.write(s["content"])
 
-            history.append({
-                "question": query,
-                "answer": answer,
-                "sources": [
-                    {"source": doc.metadata.get("source", ""), "content": doc.page_content[:300] + "..."}
-                    for doc in res["source_documents"]
-                ]
-            })
-            save_chat_history(history)
-            st.rerun()
-
-    # ✅ 仅展示最新一次回答
-    if history:
-        st.subheader("💬 当前回答")
-        chat = history[-1]
-        st.markdown(f"**🧾 问题：** {chat['question']}")
-        st.markdown(f"**🤖 回答：** {chat['answer']}")
-        if chat["sources"]:
-            with st.expander("📄 查看参考片段"):
-                for i, s in enumerate(chat["sources"], 1):
-                    st.markdown(f"**片段{i}：{s['source']}**")
-                    st.write(s["content"])
+    elif tool == "🕸️ 图谱交互":
+        from scripts.neo4j_vis import show_neo4j_graph
+        show_neo4j_graph()
 
 if __name__ == "__main__":
     main()

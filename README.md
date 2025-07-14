@@ -7,12 +7,28 @@
 - Streamlit交互界面
 
 ## 🧰 环境要求
+需要安装(neo4j数据库)[https://neo4j.com/]
 已在win10/nvidia geforce rtx3060laptop成功运行，如需迁移至linux系统，请注意修改目录路径的斜线
 
 ## 🚀 快速开始
 ```bash
+# windows
+cd \path\to\rag_local_qa  # 进入这个项目目录下
+set PYTHONPATH=.
+
+
+#linux/macos
+cd /path/to/rag_local_qa  # 进入这个项目目录下
+PYTHONPATH=. 
+
+
+
 # 安装依赖
 pip install -r requirements.txt
+python -m spacy download zh_core_web_sm
+
+# 构建知识图谱
+python scripts/build_graph_from_doc.py
 
 # 构建向量库
 python scripts/build_vector_store.py
@@ -40,7 +56,7 @@ python scripts/run_web_ui.py
 │
 │
 ├─data
-│      Linux常用命令手册.pdf    
+│      比如我这里放的是Linux常用命令手册.pdf    
 │
 ├─embeddings
 │  └─faiss_store
