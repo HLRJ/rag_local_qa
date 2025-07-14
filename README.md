@@ -1,7 +1,7 @@
 # 运维智能问答平台（RAG + 中文本地模型）
 
 ## 🧠 功能
-- 多模型中文LLM问答（Qwen、Baichuan）
+- 多模型中文LLM问答（Qwen、GLM、llama、MiniCPM4）
 - 中文向量化检索（BAAI/bge-large-zh）
 - Word/PDF/Excel上传构建知识库
 - Streamlit交互界面
@@ -15,13 +15,6 @@
 # windows
 cd \path\to\rag_local_qa  # 进入这个项目目录下
 set PYTHONPATH=.
-
-
-#linux/macos
-cd /path/to/rag_local_qa  # 进入这个项目目录下
-PYTHONPATH=. 
-
-
 
 # 安装依赖
 pip install -r requirements.txt
@@ -50,19 +43,48 @@ python scripts/run_web_ui.py
 
 ```text
 │  chat_history.json
+│  chat_history_graph_mix.json
+│  chat_history_graph_rag.json
+│  List[Tuple[str
 │  README.md
 │  requirements.txt
-│  test.py
 │
+├─.idea
+│  │  .gitignore
+│  │  deployment.xml
+│  │  misc.xml
+│  │  modules.xml
+│  │  rag_local_qa.iml
+│  │  vcs.xml
+│  │  workspace.xml
+│  │
+│  └─inspectionProfiles
+│          profiles_settings.xml
+│          Project_Default.xml
 │
 ├─data
-│      比如我这里放的是Linux常用命令手册.pdf    
+│      *.pdf *.docx
 │
 ├─embeddings
-│  └─faiss_store
-│          index.faiss
-│          index.pkl
+│  ├─faiss_store
+│  │      index.faiss
+│  │      index.pkl
+│  │      record.json
+│  │
+│  └─graph_store
 │          record.json
+│
+├─lib
+│  ├─bindings
+│  │      utils.js
+│  │
+│  ├─tom-select
+│  │      tom-select.complete.min.js
+│  │      tom-select.css
+│  │
+│  └─vis-9.1.2
+│          vis-network.css
+│          vis-network.min.js
 │
 ├─models
 │  ├─llama
@@ -112,15 +134,25 @@ python scripts/run_web_ui.py
 │              tokenizer_config.json
 │
 ├─scripts
-│      build_vector_store.py
-│      query_rag.py
-│      query_rag_mixed.py
-│      remove_doc.py
-│      run_web_ui.py
+│  │  build_graph_from_doc.py
+│  │  build_vector_store.py
+│  │  neo4j_vis.py
+│  │  query_rag_mixed.py
+│  │  query_rag_with_graph.py
+│  │  remove_doc.py
+│  │  run_web_ui.py
+│  │  __init__.py
+│  │
+│  └─__pycache__
+│          neo4j_vis.cpython-310.pyc
+│          __init__.cpython-310.pyc
 │
 └─tools
         read_gguf_header.py
         test_ctransformers.py
+        test_cuda.py
+        test_neo4j_running.py
+
 
 ```
 
