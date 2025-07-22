@@ -1,19 +1,24 @@
-# 运维智能问答平台（RAG + 中文本地模型）
+# 运维智能问答平台（RAG + 中文本地模型 + 知识图谱交互）
 
 ## 🧠 功能
 - 多模型中文LLM问答（Qwen、GLM、llama、MiniCPM4）
 - 中文向量化检索（BAAI/bge-large-zh）
 - Word/PDF/Excel上传构建知识库
-- Streamlit交互界面
+- Streamlit知识图谱交互界面
 
 ## 🧰 环境要求
-需要安装(neo4j数据库)[https://neo4j.com/]
-已在win10/nvidia geforce rtx3060laptop成功运行，如需迁移至linux系统，请注意修改目录路径的斜线
+- 需要安装(neo4j数据库)[https://neo4j.com] 开启本地数据库服务，配置如下，如果更改请将代码相关部分也一并修改。
+```text
+NEO4J_URI = "bolt://localhost:7687"
+NEO4J_USER = "neo4j"
+NEO4J_PASSWORD = "12345678"  # 请根据你的设置替换
+```
+- 在win10/nvidia geforce rtx3060laptop成功运行，如需迁移至linux系统，请注意修改目录路径的斜线
 
 ## 🚀 快速开始
 ```bash
 # windows
-cd \path\to\rag_local_qa  # 进入这个项目目录下
+cd \path\to\rag_local_qa  # 进入这个项目目录下，看你自己将软件目录放在哪里
 set PYTHONPATH=.
 
 # 安装依赖
@@ -158,7 +163,10 @@ python scripts/run_web_ui.py
 
 ## 🔍 实践
 - ❗ Baichuan2-7B-Chat、Yi-1.5-6B-Chat在移动版3060爆显存
-- 🔧 有些依赖必须在Linux环境下，Windows系统无法安装
 - ❌ MiniCPM-2B-sft-bf16、MiniCPM3-4B-GGUF简单调试后发现无法适配
 - ⚙️ llama-2-7b.Q4_K_M模型推理如果设置"gpu_layers"参数的话，可能会导致回答效果降低
 - ✅ 综合对比还是qwen效果好
+- 实机测试如下：
+![本地执行](images/00.png)
+![界面展示](images/01.png)
+![图谱交互](images/02.png)

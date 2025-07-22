@@ -53,9 +53,9 @@ def load_new_documents(indexed_files):
         try:
             if f.suffix.lower() == ".pdf":
                 loader = PyMuPDFLoader(str(f))
-            elif f.suffix.lower() == ".docx":
+            elif f.suffix.lower() == ".docx" : # or f.suffix.lower() == ".doc"
                 loader = UnstructuredWordDocumentLoader(str(f))
-            elif f.suffix.lower() == ".xlsx":
+            elif f.suffix.lower() == ".xlsx" : # or f.suffix.lower() == "xls"
                 loader = UnstructuredExcelLoader(str(f))
 
             if loader:

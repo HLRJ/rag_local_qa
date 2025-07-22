@@ -40,10 +40,10 @@ def read_gguf_arch(filename):
                     return "unknown"
     return "unknown"
 
-print("模型架构:", read_gguf_arch("F:/project/rag_local_qa/models/minicpm/MiniCPM-2B-128k-Q2_K.gguf"))
+print("模型架构:", read_gguf_arch("E:/project/rag_local_qa/models/phi-2/phi-2.Q4_K_M.gguf"))
 
 
-with open("F:/project/rag_local_qa/models/minicpm/MiniCPM-2B-128k-Q2_K.gguf", "rb") as f:
+with open("E:/project/rag_local_qa/models/phi-2/phi-2.Q4_K_M.gguf", "rb") as f:
     header = f.read(16)
 print("文件头:", header)
 
