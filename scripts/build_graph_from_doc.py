@@ -68,8 +68,11 @@ def save_indexed_files(files: List[str]):
 def load_documents():
     docs = []
     indexed = set(load_indexed_files())
-    for file in DATA_DIR.glob("*"):
-        if file.name in indexed:
+    for file in DATA_DIR.rglob("*"):
+        if not file.is_file():
+            continue
+        relative_path = str(file.relative_to(DATA_DIR))
+        if relative_path in indexed:
             continue
         try:
             if file.suffix == ".pdf":
@@ -81,9 +84,9 @@ def load_documents():
             else:
                 continue
             chunks = loader.load()
-            docs.append((file.name, chunks))
+            docs.append((relative_path, chunks))
         except Exception as e:
-            print(f"❌ 加载失败：{file.name} - {e}")
+            print(f"❌ 加载失败：{file} - {e}")
     return docs
 
 

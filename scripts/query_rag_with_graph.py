@@ -144,7 +144,7 @@ def save_chat_history(history):
 
 def main():
     st.set_page_config(page_title="RAG + Graph 问答系统", layout="wide")
-    st.title("🤖 运维知识智能问答")
+    st.title("🤖 维助通WeHelpOps")
     tool = st.sidebar.radio("🛠 功能模块", ["📘 RAG问答", "🕸️ 图谱交互"])
 
     if tool == "📘 RAG问答":

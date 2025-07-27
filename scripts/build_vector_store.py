@@ -37,41 +37,38 @@ def load_new_documents(indexed_files):
     new_docs = []
     new_files = []
 
-    files = list(SOURCE_DIR.glob("*"))
-    print("📁 当前 data 文件夹内容:", [str(f) for f in files])
-    print("绝对路径:", SOURCE_DIR.resolve())
-
-    for f in files:
-        print("正在处理文件:", f)
-        fname = f.name
-
-        if fname in indexed_files:
-            print(f"✅ 文件已存在索引，跳过: {fname}")
+    for f in SOURCE_DIR.rglob("*"):
+        if not f.is_file():
+            continue
+        relative_path = str(f.relative_to(SOURCE_DIR))
+        if relative_path in indexed_files:
+            print(f"✅ 文件已存在索引，跳过: {relative_path}")
             continue
 
         loader = None
         try:
             if f.suffix.lower() == ".pdf":
                 loader = PyMuPDFLoader(str(f))
-            elif f.suffix.lower() == ".docx" : # or f.suffix.lower() == ".doc"
+            elif f.suffix.lower() == ".docx":
                 loader = UnstructuredWordDocumentLoader(str(f))
-            elif f.suffix.lower() == ".xlsx" : # or f.suffix.lower() == "xls"
+            elif f.suffix.lower() == ".xlsx":
                 loader = UnstructuredExcelLoader(str(f))
 
             if loader:
                 docs = loader.load()
                 for doc in docs:
-                    doc.metadata["source"] = fname
+                    doc.metadata["source"] = relative_path
                     new_docs.append(doc)
-                new_files.append(fname)
-                print(f"✅ 成功加载文档 {fname}，共 {len(docs)} 段文本。")
+                new_files.append(relative_path)
+                print(f"✅ 成功加载文档 {relative_path}，共 {len(docs)} 段文本。")
             else:
-                print(f"⚠️ 文件 {fname} 格式不被支持，已跳过。")
+                print(f"⚠️ 文件 {relative_path} 格式不被支持，已跳过。")
 
         except Exception as e:
-            print(f"❌ 加载文件 {fname} 发生错误：{str(e)}")
+            print(f"❌ 加载文件 {relative_path} 发生错误：{str(e)}")
 
     return new_docs, new_files
+
 
 def main():
     os.makedirs(EMBEDDING_DIR, exist_ok=True)
