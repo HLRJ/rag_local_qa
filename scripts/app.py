@@ -1,5 +1,11 @@
 # scripts/app.py
 import streamlit as st
+# --- 确保项目根在 sys.path 中 ---
+import sys
+from pathlib import Path
+ROOT = Path(__file__).resolve().parents[1]   # .../rag_local_qa
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from scripts.modules import page_rag_chat, page_kb_manager, page_kg
 def main():
